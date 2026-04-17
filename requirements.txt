@@ -1,0 +1,9 @@
+tensorflow==2.20.0 
+matplotlib==3.8.2 
+seaborn==0.13.0 
+opencv-python==4.12.0.88 
+scikit-learn==1.7.2 
+pandas==2.1.4 
+numpy==1.26.0 
+django==5.2.11 
+pillow==10.4.0 

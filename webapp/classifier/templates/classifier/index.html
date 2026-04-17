@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Классификатор Intel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 32px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 16px;
+        }
+
+        .upload-area {
+            border: 1px dashed #ccc;
+            border-radius: 6px;
+            padding: 32px 20px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .upload-area:hover {
+            border-color: #007acc;
+            background: #fafafa;
+        }
+
+        .upload-area.drag-over {
+            border-color: #007acc;
+            background: #f0f7ff;
+        }
+
+        .upload-text {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .upload-hint {
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+        }
+
+        .file-info {
+            display: none;
+            margin: 16px 0;
+            padding: 12px;
+            background: #f0f7ff;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #007acc;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #005fa3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            margin: 0 auto 8px;
+            border: 2px solid #eee;
+            border-top: 2px solid #007acc;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fee;
+            color: #c00;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Классификация изображений</h1>
+        <div class="subtitle">Спутниковые снимки Intel / 6 классов</div>
+        
+        <form id="uploadForm" method="post" enctype="multipart/form-data" action="{% url 'predict' %}">
+            {% csrf_token %}
+            
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-text">Выберите изображение</div>
+                <div class="upload-hint">JPG, JPEG, PNG</div>
+            </div>
+            
+            <div class="file-info" id="fileInfo">
+                <span id="fileName"></span>
+            </div>
+            
+            <input type="file" name="image" id="imageInput" accept="image/jpeg,image/jpg,image/png" required>
+            
+            <button type="submit" id="submitBtn">Распознать</button>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <div>Обработка...</div>
+            </div>
+            
+            <div class="error" id="errorMsg"></div>
+        </form>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const imageInput = document.getElementById('imageInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const form = document.getElementById('uploadForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const errorMsg = document.getElementById('errorMsg');
+
+        uploadArea.addEventListener('click', () => {
+            imageInput.click();
+        });
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('drag-over');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.match('image.*')) {
+                imageInput.files = e.dataTransfer.files;
+                updateFileInfo(file);
+                errorMsg.classList.remove('show');
+            } else {
+                showError('Пожалуйста, выберите изображение');
+            }
+        });
+
+        imageInput.addEventListener('change', () => {
+            if (imageInput.files.length > 0) {
+                updateFileInfo(imageInput.files[0]);
+                errorMsg.classList.remove('show');
+            } else {
+                fileInfo.classList.remove('show');
+            }
+        });
+
+        function updateFileInfo(file) {
+            const sizeKB = (file.size / 1024).toFixed(0);
+            fileName.textContent = `${file.name} (${sizeKB} KB)`;
+            fileInfo.classList.add('show');
+        }
+
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.classList.add('show');
+            setTimeout(() => {
+                errorMsg.classList.remove('show');
+            }, 3000);
+        }
+
+        form.addEventListener('submit', (e) => {
+            if (imageInput.files.length === 0) {
+                e.preventDefault();
+                showError('Выберите изображение');
+                return;
+            }
+            
+            const file = imageInput.files[0];
+            const maxSize = 10 * 1024 * 1024;
+            if (file.size > maxSize) {
+                e.preventDefault();
+                showError('Размер файла не должен превышать 10 МБ');
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            loading.style.display = 'block';
+        });
+    </script>
+</body>
+</html>
