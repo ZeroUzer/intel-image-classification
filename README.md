@@ -1,34 +1,53 @@
-# Классификация изображений Intel
+# Классификация изображений 
 
 Классификация спутниковых изображений на 6 классов: buildings, forest, glacier, mountain, sea, street.
 
-## Точность модели
-
-- Тестовая точность: ~83%
-- Лучшая валидационная точность: 76.6%
-
-## Быстрый запуск веб-приложения
+## Запуск веб-приложения Django
 
 ```bash
+git clone https://github.com/ZeroUzer/intel-image-classification.git
+cd intel-image-classification
+pip install -r requirements.txt
 cd webapp
-pip install -r ../requirements.txt
 python manage.py migrate
 python manage.py runserver
+```
 
+## Как пользоваться
+1. Нажмите на область загрузки
+2. Выберите изображение (JPG, JPEG, PNG, до 10 МБ)
+3. Нажмите "Распознать"
+4. Результат покажет:
+- Предсказанный класс
+- Уверенность в процентах
 
-Запуск Jupyter ноутбука
-bash
-pip install -r requirements.txt
+Примеры изображений:
+- В папке notebook/test_photos/ есть примеры для тестирования.
+
+## Запуск Jupyter ноутбука (для изучения обучения модели)
+```bash
 jupyter notebook notebook/Intel_Image_Classification.ipynb
-Классы
-buildings (здания)
+```
 
-forest (лес)
+## Структура проекта
+intel-image-classification/
+│
+├── webapp/                      # Django веб-приложение
+│   ├── classifier/
+│   │   ├── views.py             # Логика предсказания
+│   │   ├── classifier.py        # Класс ImageClassifier
+│   │   └── templates/classifier/
+│   │       ├── index.html       # Форма загрузки
+│   │       └── result.html      # Страница результата
+│   ├── model/
+│   │   └── final_model.h5       # Обученная модель (78 МБ)
+│   └── manage.py
+│
+├── notebook/                    # Jupyter ноутбук
+│   ├── Intel_Image_Classification.ipynb
+│   ├── model/final_model.h5
+│   └── results/                 # Графики и метрики
+│
+├── requirements.txt             # Все зависимости
+└── README.md
 
-glacier (ледник)
-
-mountain (гора)
-
-sea (море)
-
-street (улица)
