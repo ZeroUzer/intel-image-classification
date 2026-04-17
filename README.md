@@ -30,24 +30,20 @@ jupyter notebook notebook/Intel_Image_Classification.ipynb
 ```
 
 ## Структура проекта
-intel-image-classification/
-│
-├── webapp/                      # Django веб-приложение
-│   ├── classifier/
-│   │   ├── views.py             # Логика предсказания
-│   │   ├── classifier.py        # Класс ImageClassifier
-│   │   └── templates/classifier/
-│   │       ├── index.html       # Форма загрузки
-│   │       └── result.html      # Страница результата
-│   ├── model/
-│   │   └── final_model.h5       # Обученная модель (78 МБ)
-│   └── manage.py
-│
-├── notebook/                    # Jupyter ноутбук
-│   ├── Intel_Image_Classification.ipynb
-│   ├── model/final_model.h5
-│   └── results/                 # Графики и метрики
-│
-├── requirements.txt             # Все зависимости
-└── README.md
+1. intel-image-classification
+    1. webapp/ # Django веб-приложение (основная демонстрация)
+    - classifier/ # Основное приложение
+        - views.py # Логика предсказания
+        - classifier.py # Класс ImageClassifier
+            - index.html # Форма загрузки
+            - result.html # Страница результата
+        - model/ 
+            - final_model.h5 # Обученная модель
+        - manage.py
+    2. notebook/ # Jupyter ноутбук (обучение модели)
+    - Intel_Image_Classification.ipynb
+    - model/final_model.h5
+    - results/ # Графики и метрики
+- requirements.txt # Все зависимости
+- README.md
 
